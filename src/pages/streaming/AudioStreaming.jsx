@@ -232,8 +232,8 @@ const ViewMoreDetail = ({ userId, userName, fromDate, toDate, onBack }) => {
             setCurrentPage(1);
           }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === 'host'
-              ? 'bg-purple-600 text-white'
-              : 'bg-white/5 text-gray-400 hover:bg-white/10'
+            ? 'bg-purple-600 text-white'
+            : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
         >
           <Radio className="w-4 h-4" />
@@ -245,8 +245,8 @@ const ViewMoreDetail = ({ userId, userName, fromDate, toDate, onBack }) => {
             setCurrentPage(1);
           }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === 'user'
-              ? 'bg-purple-600 text-white'
-              : 'bg-white/5 text-gray-400 hover:bg-white/10'
+            ? 'bg-purple-600 text-white'
+            : 'bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
         >
           <Eye className="w-4 h-4" />

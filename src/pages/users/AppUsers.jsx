@@ -148,7 +148,7 @@ export const AppUsers = () => {
 
       // Commented out getAppUserDetails
       // const response = await userAPI.getAppUserDetails(currentPage, pageSize);
-      // 
+      //  
       // if (response.status) {
       //   setUsers(response.appUserDetailsList || []);
       //   setTotalRecords(response.totalRecords || 0);
