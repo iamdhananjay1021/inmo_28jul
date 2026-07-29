@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Wallet, Ban, FileText, UserCog,
   TrendingDown, DollarSign, Palette, Radio, Flag, MessageSquare, LockKeyhole,
-  Gift, RefreshCw, ChevronDown, ChevronRight, Menu, X, Image, Gamepad2, SquareStack
+  Gift, RefreshCw, ChevronDown, ChevronRight, Menu, X, Image, Gamepad2, SquareStack, History
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 

@@ -146,10 +146,10 @@ export const ViewUser = () => {
     if (!dateStr) return true;
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return true;
-    
+
     const start = fromDate ? new Date(fromDate + 'T00:00:00') : null;
     const end = toDate ? new Date(toDate + 'T23:59:59') : null;
-    
+
     if (start && date < start) return false;
     if (end && date > end) return false;
     return true;
@@ -240,11 +240,10 @@ export const ViewUser = () => {
                   setGiftSubTab('sent');
                   setCurrentPage(1);
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  giftSubTab === 'sent'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${giftSubTab === 'sent'
                     ? 'bg-purple-600 text-white'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
+                  }`}
               >
                 Sent Gifts
               </button>
@@ -253,11 +252,10 @@ export const ViewUser = () => {
                   setGiftSubTab('received');
                   setCurrentPage(1);
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  giftSubTab === 'received'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${giftSubTab === 'received'
                     ? 'bg-purple-600 text-white'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
+                  }`}
               >
                 Received Gifts
               </button>
@@ -279,11 +277,10 @@ export const ViewUser = () => {
                 setGiftSubTab('sent');
                 setCurrentPage(1);
               }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                giftSubTab === 'sent'
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${giftSubTab === 'sent'
                   ? 'bg-purple-600 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
+                }`}
             >
               Sent Gifts
             </button>
@@ -292,11 +289,10 @@ export const ViewUser = () => {
                 setGiftSubTab('received');
                 setCurrentPage(1);
               }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                giftSubTab === 'received'
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${giftSubTab === 'received'
                   ? 'bg-purple-600 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
+                }`}
             >
               Received Gifts
             </button>
@@ -332,40 +328,40 @@ export const ViewUser = () => {
         </div>
 
         {/* Pagination */}
-       
+
 
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
             <p className="text-sm text-gray-400">
               Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, totalItems)} of {totalItems} entries
             </p>
-             <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">
-              Rows per page:
-            </span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-400">
+                  Rows per page:
+                </span>
 
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-           className="bg-[#3d2a60] border border-white/10 text-sm text-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500 transition-colors"
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-[#3d2a60] border border-white/10 text-sm text-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500 transition-colors"
 
-            >
-              {[20, 50, 100, 250, 500, 1000].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
+                >
+                  {[20, 50, 100, 250, 500, 1000].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {/* <p className="text-sm text-gray-400">
+              {/* <p className="text-sm text-gray-400">
             Total: {totalItems} rows
           </p> */}
-        </div>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}

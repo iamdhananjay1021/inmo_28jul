@@ -30,7 +30,7 @@ export const CoinPricing = () => {
     try {
       setLoading(true);
       const response = await userAPI.getCoinPricing();
-      
+
       // Ensure we extract the array of data properly
       let dataList = [];
       if (Array.isArray(response)) {
@@ -99,10 +99,10 @@ export const CoinPricing = () => {
       };
 
       const res = await userAPI.insertCoinPricing(payload);
-      
+
       // Some APIs return structured response, handle both standard patterns
       const isSuccess = res && (res.success || res.Success || res.Status || res.status || !res.error);
-      
+
       if (isSuccess || res) {
         showSuccess('Coin Pricing configuration added successfully!');
         // Reset form

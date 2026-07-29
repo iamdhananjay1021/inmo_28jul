@@ -137,60 +137,85 @@ export const AppUsers = () => {
     };
   }, []);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      if (searchTerm.trim()) {
-        setIsSearching(true);
-      }
-      setError(null);
-      setSelectedUsers(new Set()); // Clear selection when fetching
+  // The full-page loader unmounts the search input, so it must only ever run for
+  // the very first load -- during a search it would swallow keystrokes.
+  const hasLoadedOnceRef = useRef(false);
+  // Guards against a slower earlier request overwriting a newer one's results.
+  const requestIdRef = useRef(0);
+  const abortControllerRef = useRef(null);
 
-      // Commented out getAppUserDetails
-      // const response = await userAPI.getAppUserDetails(currentPage, pageSize);
-      //  
-      // if (response.status) {
-      //   setUsers(response.appUserDetailsList || []);
-      //   setTotalRecords(response.totalRecords || 0);
-      // } else {
-      //   setError(response.message || 'Failed to fetch users');
-      // }
-
-      const response = await userAPI.getUsers(currentPage, pageSize, searchTerm);
-      const isSuccess = response.status || response.Status;
-      if (isSuccess) {
-        const listKey = Object.keys(response).find(key => Array.isArray(response[key]));
-        const rawList = listKey ? response[listKey] : (response.data || response.Data || []);
-
-        const mapped = (response.data || []).map((u) => ({
-          userId: u.UserId,
-          name: u.Name,
-          imagePreview: u.Image,
-          mobile: u.Mobile,
-          dob: u.DOB,
-          countryName: u.Country,
-          about: u.AboutMe,
-          latestCoins: Number(u.CoinsBalance || 0),
-          latestBeans: Number(u.BeansBalance || 0),
-          adminAgencyHostStatus: u.AdminAgencyHostStatus,
-          createDate: u.Created_Date || u.CreatedDate || u.createDate,
-        }));
-
-
-        setUsers(mapped);
-        setFilteredUsers(mapped);
-        setTotalRecords(response.TotalCount);
-      } else {
-        setError(response.message || response.Message || 'Failed to fetch users');
-      }
-    } catch (err) {
-      console.error('Fetch users error:', err);
-      setError('Failed to load users. Please try again.');
-    } finally {
-      setLoading(false);
-      setIsSearching(false);
+  const fetchUsers = useCallback(async () => {
+    // Drop any in-flight request: typing/backspacing fires these back to back.
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
-  };
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const requestId = ++requestIdRef.current;
+
+    const isInitialLoad = !hasLoadedOnceRef.current;
+
+    try {
+      if (isInitialLoad) {
+        setLoading(true);
+      }
+      setIsSearching(true);
+      setError(null);
+
+      const response = await userAPI.getUsers(currentPage, pageSize, searchTerm, {
+        signal: controller.signal,
+      });
+
+      // A newer request already started -- discard this (stale) response.
+      if (requestId !== requestIdRef.current) return;
+
+      // Tolerate [], null and a missing/renamed data key: "no match" is a valid
+      // result, never an error.
+      const rawList = response?.data ?? response?.Data ?? [];
+      const list = Array.isArray(rawList) ? rawList : [];
+
+      const mapped = list.map((u) => ({
+        userId: u.UserId,
+        name: u.Name,
+        imagePreview: u.Image,
+        mobile: u.Mobile,
+        dob: u.DOB,
+        countryName: u.Country,
+        about: u.AboutMe,
+        latestCoins: Number(u.CoinsBalance || 0),
+        latestBeans: Number(u.BeansBalance || 0),
+        adminAgencyHostStatus: u.AdminAgencyHostStatus,
+        createDate: u.Created_Date || u.CreatedDate || u.createDate,
+      }));
+
+      const total = response?.TotalCount ?? response?.totalCount ?? response?.TotalRecords;
+      setUsers(mapped);
+      setFilteredUsers(mapped);
+      setTotalRecords(Number(total ?? mapped.length) || 0);
+      setSelectedUsers(new Set());
+    } catch (err) {
+      // An abort is our own doing, not a failure -- the newer request owns the UI now.
+      if (err?.code === 'ERR_CANCELED' || err?.name === 'CanceledError' || err?.name === 'AbortError') {
+        return;
+      }
+      if (requestId !== requestIdRef.current) return;
+
+      console.error('Fetch users error:', err);
+      if (isInitialLoad) {
+        // Nothing on screen yet, so the full-page error with Retry is safe here.
+        setError('Failed to load users. Please try again.');
+      } else {
+        // Keep the table and the input mounted; just report the failure.
+        showToast('Failed to load users. Please try again.', 'error');
+      }
+    } finally {
+      if (requestId === requestIdRef.current) {
+        hasLoadedOnceRef.current = true;
+        setLoading(false);
+        setIsSearching(false);
+      }
+    }
+  }, [currentPage, pageSize, searchTerm]);
 
   useEffect(() => {
     if (searchTerm && currentPage !== 1) {
@@ -199,7 +224,10 @@ export const AppUsers = () => {
     }
 
     fetchUsers();
-  }, [currentPage, pageSize, searchTerm]);
+  }, [fetchUsers, currentPage, searchTerm]);
+
+  // Cancel any in-flight request on unmount.
+  useEffect(() => () => abortControllerRef.current?.abort(), []);
 
   const handleImageError = (e) => {
     e.target.src = DEFAULT_AVATAR;
@@ -414,15 +442,15 @@ export const AppUsers = () => {
   useEffect(() => {
     const value = debouncedSearchTerm.trim();
 
-    // Empty search -> load all users
     if (value === "") {
       setSearchTerm("");
       return;
     }
 
-    // Only search after 4 characters
     if (value.length >= 4) {
       setSearchTerm(value);
+    } else {
+      setSearchTerm("");
     }
   }, [debouncedSearchTerm]);
   // Check if a date is within the selected range
@@ -467,7 +495,6 @@ export const AppUsers = () => {
   };
 
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const abortControllerRef = useRef(null);
 
   const performSearch = useCallback(() => {
     const hasDateFilter = dateFilterActive && (fromDate || toDate);
@@ -774,7 +801,8 @@ export const AppUsers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {isSearching ? (
+              {/* Rows stay put while a new search loads; the input spinner shows progress. */}
+              {isSearching && filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan="11" className="px-6 py-8 text-center text-gray-400">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
@@ -784,7 +812,9 @@ export const AppUsers = () => {
               ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan="11" className="px-6 py-8 text-center text-gray-400">
-                    No users found
+                    {searchTerm.trim()
+                      ? `No users found for "${searchTerm.trim()}"`
+                      : 'No users found'}
                   </td>
                 </tr>
               ) : (

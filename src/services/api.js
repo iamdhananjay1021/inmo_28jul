@@ -240,9 +240,10 @@ export const userAPI = {
   //   return response.data;
   // },
 
-  getUsers: async (pageNo = 1, pageSize = 20, search = '') => {
+  getUsers: async (pageNo = 1, pageSize = 20, search = '', options = {}) => {
     const response = await api.get(API_ENDPOINTS.USER.GET_ALL_USERS_REGISTRATION, {
-      params: { Page: pageNo, PageSize: pageSize, Search: search }
+      params: { Page: pageNo, PageSize: pageSize, Search: search },
+      signal: options.signal,
     });
     return response.data;
   },
@@ -973,6 +974,15 @@ export const userAPI = {
       status,
       data: formattedData
     };
+  },
+
+  // Room session logs. Type is 'User' or 'Host'; dates are YYYY-MM-DD.
+  // UserId is optional -- leave it out to get every user in the range.
+  getRoomLogs: async ({ type = 'User', fromDate, toDate, userId } = {}) => {
+    const payload = { Type: type, FromDate: fromDate, ToDate: toDate };
+    if (userId) payload.UserId = userId;
+    const response = await api.post(API_ENDPOINTS.USER.GET_HOST_USERS_TIMING, payload);
+    return response.data;
   },
 
   getRoomLogsToday: async () => {

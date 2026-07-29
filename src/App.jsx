@@ -47,6 +47,7 @@ import { CoinReselling } from './pages/reseller/CoinReselling';
 import ApproveAgentRequest from './pages/agent/ApproveAgentRequest';
 import { AdminToResellerTransection } from './pages/reseller/AdminToResellerTransection';
 import { WhatsAppOTPLogs } from './pages/whatsapplogs/WhatsAppOTPLogs';
+
 import { StaticOtp } from './pages/staticopt/StaticOtp';
 
 const ProtectedRoute = ({ children }) => {

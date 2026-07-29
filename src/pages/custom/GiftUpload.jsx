@@ -474,6 +474,18 @@ const EditModal = ({ gift, onClose, onSave, loading }) => {
 //   );
 // };
 
+// GetGiftData returns camelCase keys (fileName/count/imageUrl/type) while this
+// page renders PascalCase ones, so map every row to the shape the table expects.
+const normalizeGift = (gift) => ({
+  ...gift,
+  Id: gift.Id ?? gift.id ?? gift.GiftId ?? gift.giftId ?? null,
+  GiftName: gift.GiftName || gift.fileName || gift.FileName || '',
+  GiftAmount: gift.GiftAmount ?? gift.count ?? gift.Count ?? 0,
+  Type: gift.Type || gift.type || '',
+  GiftImages: gift.GiftImages || gift.imageUrl || gift.ImageUrl || gift.gifUrl || '',
+  GiftGIF: gift.GiftGIF || gift.videoURL || gift.VideoURL || gift.gifUrl || '',
+});
+
 export const GiftUpload = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Animation');
@@ -481,7 +493,7 @@ export const GiftUpload = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const pageSizeOptions = [20, 40, 100, 200, 300, 500];
 
   // Modal states
@@ -505,11 +517,13 @@ export const GiftUpload = () => {
       setLoading(true);
       const response = await userAPI.getGifts(activeTab);
       const isSuccess = response.Status === true || response.status === true;
-      if (isSuccess && response.data) {
-        setGiftsList(response.data);
+      const rows = response.data || response.Data || [];
+      if (isSuccess && Array.isArray(rows)) {
+        setGiftsList(rows.map(normalizeGift));
       } else {
         setGiftsList([]);
       }
+      setCurrentPage(1);
     } catch (err) {
       console.error('Fetch gifts error:', err);
       setGiftsList([]);
@@ -550,6 +564,11 @@ export const GiftUpload = () => {
 
   // Handle Edit Click
   const handleEditClick = (gift) => {
+    // UpdateGiftData keys off Id as well -- see the note in handleDelete.
+    if (gift.Id === null || gift.Id === undefined || gift.Id === '') {
+      showError('This gift has no Id from the server, so it cannot be edited. Please ask backend to return Id in GetGiftData.');
+      return;
+    }
     setSelectedGift(gift);
     setEditModalOpen(true);
   };
@@ -578,6 +597,13 @@ export const GiftUpload = () => {
 
   // Handle Delete
   const handleDelete = async (gift) => {
+    // GetGiftData currently returns no Id, and DeleteGiftData deletes by Id --
+    // sending a missing one would target the wrong record.
+    if (gift.Id === null || gift.Id === undefined || gift.Id === '') {
+      showError('This gift has no Id from the server, so it cannot be deleted. Please ask backend to return Id in GetGiftData.');
+      return;
+    }
+
     const { isConfirmed } = await showConfirm({
       title: 'Confirm Action',
       text: `Are you sure you want to delete gift: ${gift.GiftName || 'this gift'}?`,
@@ -714,7 +740,7 @@ export const GiftUpload = () => {
                 paginatedGifts.map((gift, index) => {
                   return (
                     <motion.tr
-                      key={gift.Id}
+                      key={gift.Id ?? `${gift.GiftName}-${startIndex + index}`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: index * 0.05 }}
